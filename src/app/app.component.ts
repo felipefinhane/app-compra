@@ -1,10 +1,14 @@
 import { Component, ViewChild } from '@angular/core';
-import { Nav, Platform } from 'ionic-angular';
+import { Nav, Platform, MenuController } from 'ionic-angular';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { HomePage } from '../pages/home/home';
-import { ListPage } from '../pages/list/list';
+import { FormPage } from '../pages/form/form';
+import { ProfilePage } from '../pages/profile/profile';
+import { LoginPage } from '../pages/login/login';
+
+import { UserProvider } from '../providers/user/user';
 
 @Component({
   templateUrl: 'app.html'
@@ -14,17 +18,37 @@ export class MyApp {
 
   rootPage: any = HomePage;
 
-  pages: Array<{title: string, component: any}>;
+  defaultPages: Array<{title: string, component: any}>;
+  userPages: Array<{title: string, component: any}>;
 
-  constructor(public platform: Platform, public statusBar: StatusBar, public splashScreen: SplashScreen) {
+  constructor(
+    public platform: Platform,
+    public statusBar: StatusBar,
+    public splashScreen: SplashScreen,
+    public userProvider: UserProvider,
+    public menuCtrl: MenuController
+  ) {
     this.initializeApp();
 
     // used for an example of ngFor and navigation
-    this.pages = [
+    this.defaultPages = [
       { title: 'Home', component: HomePage },
-      { title: 'List', component: ListPage }
+      { title: 'Login', component: LoginPage },
+      { title: 'Cadastro', component: FormPage }
     ];
 
+    this.userPages = [
+      { title: 'Home', component: HomePage },
+      { title: 'Perfil', component: ProfilePage }
+    ];
+
+    this.userProvider.getStorage('userData').then(userData => {
+      if (userData) {
+        this.enableUserMenu();
+      } else {
+        this.enableDefaultMenu();
+      }
+    });
   }
 
   initializeApp() {
@@ -40,5 +64,20 @@ export class MyApp {
     // Reset the content nav to have just this page
     // we wouldn't want the back button to show in this scenario
     this.nav.setRoot(page.component);
+  }
+
+  enableDefaultMenu() {
+    this.menuCtrl.enable(false, 'userMenu');
+    this.menuCtrl.enable(true, 'defaultMenu');
+  }
+
+  enableUserMenu() {
+    this.menuCtrl.enable(true, 'userMenu');
+    this.menuCtrl.enable(false, 'defaultMenu');
+  }
+
+  logout() {
+    this.userProvider.setStorage('userData', null);
+    this.enableDefaultMenu();
   }
 }
